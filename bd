@@ -1,0 +1,93 @@
+const { Telegraf } = require("telegraf");
+const LocalSession = require("telegraf-session-local");
+const { message, callbackQuery, channelPost } = require("telegraf/filters");
+
+const bot = new Telegraf("7057546924:AAFZy9Ww953byBdkdd8S4TLw01W46-C_gZM");
+// Use LocalSession to manage user sessions
+bot.use(new LocalSession({ database: "captcha_db.json" }).middleware());
+
+// Generates a simple math problem (e.g., "5 + 3")
+function generateMathProblem() {
+  const num1 = Math.floor(Math.random() * 10);
+  const num2 = Math.floor(Math.random() * 10);
+  const solution = num1 + num2;
+  return { question: `${num1} + ${num2}`, solution };
+}
+
+// Middleware to restrict chat members based on their captcha status
+bot.on(message("new_chat_members"), async (ctx) => {
+  const newMembers = ctx.message.new_chat_members;
+
+  for (const newMember of newMembers) {
+    if (!newMember.is_bot) {
+      const mathProblem = generateMathProblem();
+
+      // Store the problem and solution in the session
+      ctx.session.captcha = {
+        problem: mathProblem.question,
+        solution: mathProblem.solution,
+        attemptsLeft: 30,
+        status: "pending",
+        newMemberId: newMember.id,
+      };
+
+      // Mute the new member
+      //   await ctx.telegram.restrictChatMember(ctx.chat.id, newMember.id, {
+      //     can_send_messages: false,
+      //   });
+
+      // Send the captcha challenge
+      const challengeMessage = await ctx.replyWithHTML(
+        `Welcome to our community. Please prove to me that you are a human by solving this simple math task: <b>${mathProblem.question}</b>`
+      );
+      //   const challengeMessage = await ctx.replyWithHTML(
+      //     `Welcome <b>${newMember.first_name}</b>! 🚨\n\nBefore you can chat, solve this math problem: <b>${mathProblem.question}</b>\n\nYou have 3 attempts!`
+      //   );
+
+      ctx.session.captcha.challengeMessageId = challengeMessage.message_id;
+      ctx.session.captcha.challengechatId = challengeMessage.chat.id;
+
+      setTimeout(async () => {
+        if (ctx.session.captcha.status === "pending") {
+          await ctx.telegram.deleteMessage(
+            ctx.session.captcha.challengechatId,
+            ctx.session.captcha.challengeMessageId
+          );
+          ctx.session.captcha.status = "expired";
+          await ctx.telegram.banChatMember(
+            ctx.session.captcha.challengechatId,
+            ctx.session.captcha.newMemberId
+          );
+        }
+      }, 20000);
+    }
+  }
+});
+
+// Listener to check if the answer provided by the user is correct
+bot.on("text", async (ctx) => {
+  const userSession = ctx.session.captcha;
+
+  if (userSession && userSession.status === "pending") {
+    const userAnswer = parseInt(ctx.message.text, 10);
+    ctx.telegram.deleteMessage(ctx.message.chat.id, ctx.message.message_id);
+
+    if (userAnswer === userSession.solution) {
+      await ctx.telegram.deleteMessage(
+        ctx.session.captcha.challengechatId,
+        ctx.session.captcha.challengeMessageId
+      );
+
+      userSession.status = "solved";
+    } else {
+      userSession.attemptsLeft--;
+
+      if (userSession.attemptsLeft > 0) {
+      } else {
+        userSession.status = "failed";
+      }
+    }
+  }
+});
+
+bot.launch();
