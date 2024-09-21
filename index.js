@@ -2,8 +2,8 @@ const { Telegraf } = require("telegraf");
 const LocalSession = require("telegraf-session-local");
 const express = require("express");
 const bodyParser = require("body-parser");
-
-const bot = new Telegraf("7558552707:AAGUz0iZSXO6Rcwf4blSWq-dZBL5pV9AqUg"); // Use environment variable for bot token
+const token = process.env.BOT_TOKEN
+const bot = new Telegraf(token); // Use environment variable for bot token
 
 // Middleware for user sessions
 bot.use(new LocalSession({ database: "captcha_db.json" }).middleware());
@@ -12,7 +12,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // Webhook handler for Telegram
-app.post("/webhook", (req, res) => {
+app.post(`/webhook/${token}`, (req, res) => {
   bot.handleUpdate(req.body)
   .then(() => {console.log("working"); res.sendStatus(200)}) // Respond with 200 OK if update was processed
     .catch((err) => {
@@ -25,15 +25,13 @@ app.post("/webhook", (req, res) => {
 
 
 // setting web hoook 
-bot.telegram.setWebhook(`https://aa7a-105-119-3-94.ngrok-free.app/webhook`,{allowed_updates: JSON.stringify(["message", "edited_channel_post", "callback_query", "message_reaction", "message_reaction_count","message", "chat_member"])}).then((info => console.log(info)));
-
+// bot.telegram.setWebhook(`https://aa7a-105-119-3-94.ngrok-free.app/webhook/${token}`,{allowed_updates: JSON.stringify(["message", "edited_channel_post", "callback_query", "message_reaction", "message_reaction_count","message", "chat_member"])}).then((info => console.log(info)));
 
 
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, (res) => {
   console.log(`Server running on port ${PORT}`);
-  res.json("connected")
 });
 
 // Function to generate a random math problem
