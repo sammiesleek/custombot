@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "nodemon": "^3.1.6",
     "telegraf": "^4.16.3",
     "telegraf-session-local": "^2.1.1"
   },
@@ -13,8 +13,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "echo \"Error: no test specified\" && exit 1",
-    "start": " node ."
+    "dev": "nodemon index.js",
+    "start": " node index.js"
   },
   "author": "sammyajayi",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
 }
