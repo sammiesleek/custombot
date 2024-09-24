@@ -1,3 +1,49 @@
 {
-  "sessions": []
+  "sessions": [
+    {
+      "id": "-1002330044586:5387093206",
+      "data": {
+        "captcha": {
+          "problem": "7 + 8",
+          "solution": 15,
+          "attemptsLeft": 28,
+          "status": "pending",
+          "newMemberId": 5387093206,
+          "thisChatId": -1002330044586,
+          "challengeMessageId": 1090,
+          "challengechatId": -1002330044586
+        }
+      }
+    },
+    {
+      "id": "-1002330044586:1874500579",
+      "data": {
+        "captcha": {
+          "problem": "2 + 9",
+          "solution": 11,
+          "attemptsLeft": 29,
+          "status": "solved",
+          "newMemberId": 1874500579,
+          "thisChatId": -1002330044586,
+          "challengeMessageId": 1094,
+          "challengechatId": -1002330044586
+        }
+      }
+    },
+    {
+      "id": "-1002330044586:5394058437",
+      "data": {
+        "captcha": {
+          "problem": "1 + 1",
+          "solution": 2,
+          "attemptsLeft": 29,
+          "status": "solved",
+          "newMemberId": 5394058437,
+          "thisChatId": -1002330044586,
+          "challengeMessageId": 1103,
+          "challengechatId": -1002330044586
+        }
+      }
+    }
+  ]
 }

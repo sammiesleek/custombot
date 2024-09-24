@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 const botLink = "https://t.me/Tester_my_bot_bot?start=chat";
+export const botId = 7885430459;
 
 const getAdmins = async (ctx) => {
   if (ctx.message.chat.id && ctx.chat.type !== "private") {
@@ -44,7 +45,11 @@ const getGroup = async (ctx, id) => {
 };
 
 const registerGroup = async (ctx) => {
-  if (ctx.message.new_chat_member && ctx.message.new_chat_member.id === botId) {
+  if (
+    ctx.message.new_chat_member &&
+    ctx.message.new_chat_member.id &&
+    ctx.message.new_chat_member.id === botId
+  ) {
     let allgroups = loadDataBase("groups").filter(
       (group) => group.id != ctx.message.chat.id
     );
@@ -166,9 +171,9 @@ const updateGroupSettings = (userId, pathToUpdate, newValue) => {
   // Save the updated group back to the database
   saveToDataBase("groups", groups);
 
-  console.log(
-    `Group ${connectedGroup.title} updated. Path: ${pathToUpdate}, New Value: ${newValue}`
-  );
+  // console.log(
+  //   `Group ${connectedGroup.title} updated. Path: ${pathToUpdate}, New Value: ${newValue}`
+  // );
 };
 
 const handleCallback = async (ctx) => {
@@ -176,38 +181,37 @@ const handleCallback = async (ctx) => {
   const [languageCode, userId] = callbackData.split(":");
   const userIdt = parseInt(userId);
 
-  switch (languageCode) {
-    case "lang_english":
-      updateGroupSettings(userIdt, "settings.lang", "english");
-      await ctx.answerCbQuery("✅");
-      await ctx.reply(`You selected language is English`);
-      break;
-    case "lang_turkish":
-      updateGroupSettings(userIdt, "settings.lang", "turkish");
-      await ctx.answerCbQuery("✅");
-      await ctx.reply(`You selected language is Turkish`);
-      break;
-    case "lang_french":
-      updateGroupSettings(userIdt, "settings.lang", "french");
-      await ctx.answerCbQuery("✅");
-      await ctx.reply(`You selected language is French`);
-      break;
-    case "lang_spanish":
-      updateGroupSettings(userIdt, "settings.lang", "spanish");
-      await ctx.answerCbQuery("✅");
-      await ctx.reply(`You selected language is Spanish`);
-      break;
-    case "lang_italian":
-      updateGroupSettings(userIdt, "settings.lang", "italian");
-      await ctx.answerCbQuery("✅");
-      await ctx.reply(`You selected language is Italian`);
-      break;
-    case "lang_russian":
-      updateGroupSettings(userIdt, "settings.lang", "russian");
-      await ctx.answerCbQuery("✅");
-      await ctx.reply(`You selected language is Russian`);
-      break;
-    default:
+  const languageMap = {
+    lang_english: {
+      lang: "english",
+      message: "You selected language is English",
+    },
+    lang_turkish: {
+      lang: "turkish",
+      message: "You selected language is Turkish",
+    },
+    lang_french: { lang: "french", message: "You selected language is French" },
+    lang_spanish: {
+      lang: "spanish",
+      message: "You selected language is Spanish",
+    },
+    lang_italian: {
+      lang: "italian",
+      message: "You selected language is Italian",
+    },
+    lang_russian: {
+      lang: "russian",
+      message: "You selected language is Russian",
+    },
+    lang_german: { lang: "german", message: "You selected language is German" },
+  };
+
+  const selectedLanguage = languageMap[languageCode];
+
+  if (selectedLanguage) {
+    updateGroupSettings(userIdt, "settings.lang", selectedLanguage.lang);
+    await ctx.answerCbQuery("✅");
+    await ctx.reply(selectedLanguage.message);
   }
 };
 

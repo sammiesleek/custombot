@@ -1,11 +1,5 @@
 import { Markup } from "telegraf";
-import {
-  botLink,
-  isAdmin,
-  loadDataBase,
-  saveToDataBase,
-  updateGroupSettings,
-} from "./functions.js";
+import { botLink, isAdmin, loadDataBase, saveToDataBase } from "./functions.js";
 
 const connectAdmin = async (ctx) => {
   const isUserAdmin = await isAdmin(ctx);
@@ -208,6 +202,7 @@ const handleSettingsCommand = async (ctx) => {
                     `lang_italian:${userId}`
                   ),
                 ],
+                [Markup.button.callback(`German 🇩🇪`, `lang_german:${userId}`)],
               ])
             );
           }

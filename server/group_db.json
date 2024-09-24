@@ -4,7 +4,25 @@
     "title": "Concept",
     "username": "coinstersed",
     "settings": {
-      "lang": "french"
+      "lang": "spanish"
+    },
+    "blocklist": [
+      "fake",
+      "scam",
+      "rug"
+    ],
+    "filters": {
+      "website": "",
+      "buy": "",
+      "adminList": ""
+    }
+  },
+  {
+    "id": -1002444458549,
+    "title": "Newbots",
+    "username": "chekysed",
+    "settings": {
+      "lang": "italian"
     },
     "blocklist": [
       "fake",

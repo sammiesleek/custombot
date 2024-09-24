@@ -16,7 +16,6 @@ import {
   saveToDataBase,
 } from "./funcs/functions.js";
 const token = "7885430459:AAGpsZbmfL7ZlqzQM9JKTwAJmmgkd8YYXgo";
-const botId = 7885430459;
 const app = express();
 app.use(bodyParser.json());
 
@@ -39,7 +38,19 @@ app.post(`/webhook/${token}`, (req, res) => {
 });
 
 //setting web hoook
-//bot.telegram.setWebhook(`https://83ee-105-119-4-200.ngrok-free.app/webhook/${token}`,{allowed_updates: JSON.stringify(["message", "edited_channel_post", "callback_query", "message_reaction", "message_reaction_count","message", "chat_member"])}).then((info => console.log(info)));
+// bot.telegram
+//   .setWebhook(`https://fe7f-105-119-4-200.ngrok-free.app/webhook/${token}`, {
+//     allowed_updates: JSON.stringify([
+//       "message",
+//       "edited_channel_post",
+//       "callback_query",
+//       "message_reaction",
+//       "message_reaction_count",
+//       "message",
+//       "chat_member",
+//     ]),
+//   })
+//   .then((info) => console.log(info));
 
 // bot.telegram.deleteWebhook().then((res)=> console.log(res))
 
