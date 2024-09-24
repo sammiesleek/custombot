@@ -1,0 +1,20 @@
+[
+  {
+    "id": -1002330044586,
+    "title": "Concept",
+    "username": "coinstersed",
+    "settings": {
+      "lang": "french"
+    },
+    "blocklist": [
+      "fake",
+      "scam",
+      "rug"
+    ],
+    "filters": {
+      "website": "",
+      "buy": "",
+      "adminList": ""
+    }
+  }
+]
