@@ -1,221 +1,218 @@
 import { Markup } from "telegraf";
-import { botLink, isAdmin, loadDataBase, saveToDataBase } from "./functions.js";
+import { botLink, isAdmin } from "./functions.js";
+import User from "../database/model/userModel.js";
+import Group from "../database/model/groupModel.js";
 
-const connectAdmin = async (ctx) => {
-  const isUserAdmin = await isAdmin(ctx);
-  if (isUserAdmin) {
-    try {
-      if (ctx.message.text && ctx.message.text[0].toLowerCase() == "/") {
-        const textCommand = ctx.message.text.toLowerCase(); // Normalize command
+const handleCommands = async (ctx) => {
+  try {
+    if (ctx.message.text != undefined && ctx.message.text.startsWith("/")) {
+      // hanlde commands from groups
+      if (ctx.message.chat.type != "private") {
+        groupCommands(ctx);
+      }
+      // handleCommands from bot dm
+      if (ctx.message.chat.type == "private") {
+        handleSettingsCommand(ctx);
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-        switch (textCommand) {
-          case "/start": {
-            const user = ctx.message.from;
+const groupCommands = async (ctx) => {
+  const isUserAdmin = await isAdmin(ctx); // Assume this checks if the user is an admin
+  const textCommand = ctx.message.text.toLowerCase();
 
-            if (ctx.message.chat.id && ctx.chat.type == "private") {
-              const adminUser = loadDataBase("admins").filter(
-                (admin) => admin.id === user.id
-              )[0];
+  try {
+    switch (textCommand) {
+      case "/connectme": {
+        if (isUserAdmin) {
+          const adminUser = ctx.message.from;
+          let thisAdminData = await User.findOne({ id: adminUser.id });
+          if (thisAdminData) {
+            // Check if active group needs updating
+            if (thisAdminData.active_group.id !== ctx.chat.id) {
+              // Update the active group and group list
+              thisAdminData.active_group = {
+                id: ctx.chat.id,
+                admin: adminUser.id,
+                title: ctx.chat.title,
+              };
 
-              if (adminUser) {
-                const groupId = adminUser.active_group.id;
-                const connectedGroup = loadDataBase("groups").filter(
-                  (group) => group.id === groupId
-                )[0];
-
-                ctx.reply(`You are  connected to ${connectedGroup.title}`);
-              } else {
-                ctx.reply("You are not connected to any group");
-              }
-            }
-
-            break;
-          }
-          case "/setlang": {
-            break;
-          }
-          case "/linkup": {
-            const userIsAdmin = await isAdmin(ctx);
-            if (userIsAdmin) {
-              const adminUser = ctx.message.from;
-              const admins = loadDataBase("admins");
-
-              if (admins.some((user) => user.id === adminUser.id)) {
-                const thisAdminData = admins.filter(
-                  (admin) => admin.id === adminUser.id
-                )[0];
-                let updatedAdminData = {
-                  id: thisAdminData.id,
-                  username: adminUser.username,
-                  firstname: adminUser.first_name,
-                };
-
-                if (thisAdminData.active_group.id != ctx.chat.id) {
-                  let updatedAdminData = {
-                    id: thisAdminData.id,
-                    username: thisAdminData.username,
-                    firstname: thisAdminData.first_name,
-                  };
-
-                  updatedAdminData.active_group = {
-                    id: ctx.chat.id,
-                    admin: adminUser.id,
-                    title: ctx.chat.title,
-                  };
-
-                  let updatedGroupins = thisAdminData.group_ins.filter(
-                    (group) => group.id != ctx.chat.id
-                  );
-
-                  updatedGroupins.push({
-                    id: ctx.chat.id,
-                    admin: adminUser.id,
-                    title: ctx.chat.title,
-                  });
-
-                  updatedAdminData.group_ins = updatedGroupins;
-
-                  let adminDatatoSave = admins.filter(
-                    (admin) => admin.id != adminUser.id
-                  );
-                  adminDatatoSave.push(updatedAdminData);
-                  saveToDataBase("admins", adminDatatoSave);
-                }
-              } else {
-                const thisAdminData = {
-                  id: adminUser.id,
-                  username: adminUser.username,
-                  firstname: adminUser.first_name || "",
-                  active_group: {
-                    id: ctx.chat.id,
-                    admin: adminUser.id,
-                    title: ctx.chat.title,
-                  },
-                  group_ins: [
-                    {
-                      id: ctx.chat.id,
-                      title: ctx.chat.title,
-                      admin: adminUser.id,
-                    },
-                  ],
-                };
-
-                let updatedAdmins = admins;
-
-                updatedAdmins.push(thisAdminData);
-
-                console.log(updatedAdmins);
-
-                saveToDataBase("admins", updatedAdmins);
-              }
-
-              const userDisplayName = adminUser.username
-                ? "@" + adminUser.username
-                : adminUser.first_name || adminUser.last_name || "there";
-
-              const resMessage = await ctx.reply(
-                `Hello ${userDisplayName}, Please click the button to chat with me:`,
-                {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [{ text: "Chat with the Bot", url: botLink || "#" }], // Button with URL to the bot's DM
-                    ],
-                  },
-                }
+              // Ensure the group is in the list of managed groups
+              const groupExists = thisAdminData.group_ins.some(
+                (group) => group.id === ctx.chat.id
               );
 
-              setTimeout(() => {
-                ctx.telegram.deleteMessage(
-                  resMessage.chat.id,
-                  resMessage.message_id
-                );
-                ctx.telegram.deleteMessage(ctx.chat.id, ctx.message.message_id);
-              }, 4000);
-            } else {
-              ctx.reply("You need to be an Admin to use this command");
+              if (!groupExists) {
+                thisAdminData.group_ins.push({
+                  id: ctx.chat.id,
+                  admin: adminUser.id,
+                  title: ctx.chat.title,
+                });
+              }
+
+              // Save the updated admin data to the database
+              await thisAdminData.save();
             }
+          } else {
+            // Create a new admin entry if they don't exist
+            const newAdminData = new User({
+              id: adminUser.id,
+              username: adminUser.username,
+              firstname: adminUser.first_name || "",
+              active_group: {
+                id: ctx.chat.id,
+                admin: adminUser.id,
+                title: ctx.chat.title,
+              },
+              group_ins: [
+                {
+                  id: ctx.chat.id,
+                  title: ctx.chat.title,
+                  admin: adminUser.id,
+                },
+              ],
+            });
 
-            break;
+            // Save the new admin data to the database
+            await newAdminData.save();
           }
 
-          case "/link": {
-            // Handle `/link` command logic here
-            ctx.reply("This feature is not implemented yet.");
-            break;
-          }
+          // Prepare the display name
+          const userDisplayName = adminUser.username
+            ? "@" + adminUser.username
+            : adminUser.first_name || adminUser.last_name || "there";
 
-          default: {
-            ctx.reply("Unknown command. Please use /linkup or /link.");
-            break;
-          }
+          // Send a response message with a button
+          const resMessage = await ctx.reply(
+            `Hello ${userDisplayName}, Please click the button to chat with me:`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: "Chat with the Bot", url: botLink || "#" }], // Button with URL to the bot's DM
+                ],
+              },
+            }
+          );
+
+          // Delete the messages after 5 seconds
+          setTimeout(async () => {
+            try {
+              await ctx.telegram.deleteMessage(
+                resMessage.chat.id,
+                resMessage.message_id
+              );
+              await ctx.telegram.deleteMessage(
+                ctx.chat.id,
+                ctx.message.message_id
+              );
+            } catch (error) {
+              if (error.code === 400) {
+                console.log("Message not found, cannot delete.");
+              } else {
+                console.error(error);
+              }
+            }
+          }, 5000);
         }
+
+        // Find the admin in the database
+        break;
       }
-    } catch (error) {
-      console.error("Error processing admin command:", error);
-      ctx.reply("An error occurred while processing your request.");
     }
+  } catch (error) {
+    console.error("Error processing admin command:", error);
+    ctx.reply("An error occurred while processing your request.");
   }
 };
 
 const handleSettingsCommand = async (ctx) => {
+  const messageText = ctx.message.text;
+  const [command, value] = messageText.toLowerCase().split(" ");
   const userId = ctx.message.from.id;
-  const userIsAdmin = loadDataBase("admins").some(
-    (admin) => admin.id === userId
-  );
+  try {
+    // get user from users Table
+    const adminUser = await User.findOne({ id: userId });
+    if (adminUser) {
+      const activeGroupId = adminUser.active_group?.id;
 
-  if (userIsAdmin) {
-    try {
-      if (
-        ctx.message.text &&
-        ctx.message.text.toLowerCase().split(" ")[0][0] == "/"
-      ) {
-        const [command, value] = ctx.message.text.toLowerCase().split(" ");
+      if (activeGroupId) {
+        const connectedGroup = await Group.findOne({ id: activeGroupId });
 
-        switch (command) {
-          case "/setlang": {
-            ctx.reply(
-              "Please select your language:",
+        if (connectedGroup) {
+          switch (command) {
+            case "/start": {
+              ctx.reply(`You are connected to ${connectedGroup.title}`);
 
-              Markup.inlineKeyboard([
-                [
-                  Markup.button.callback(
-                    `English 🏴`,
-                    `lang_english:${userId}`
-                  ),
-                  Markup.button.callback(
-                    `Spanish 🇪🇸`,
-                    `lang_spanish:${userId}`
-                  ),
-                  Markup.button.callback(
-                    `Turkish 🇹🇲`,
-                    `lang_turkish:${userId}`
-                  ),
-                ],
-                [
-                  Markup.button.callback(`French 🇫🇷`, `lang_french:${userId}`),
-                  Markup.button.callback(
-                    `Russian 🇷🇺`,
-                    `lang_russian:${userId}`
-                  ),
-                  Markup.button.callback(
-                    `Italian 🇮🇹`,
-                    `lang_italian:${userId}`
-                  ),
-                ],
-                [Markup.button.callback(`German 🇩🇪`, `lang_german:${userId}`)],
-              ])
-            );
+              break;
+            }
+
+            case "/setlang": {
+              ctx.reply(
+                "Please select your language:",
+                Markup.inlineKeyboard([
+                  [
+                    Markup.button.callback(
+                      `English 🏴`,
+                      `lang_english:${userId}`
+                    ),
+                    Markup.button.callback(
+                      `Spanish 🇪🇸`,
+                      `lang_spanish:${userId}`
+                    ),
+                    Markup.button.callback(
+                      `Turkish 🇹🇲`,
+                      `lang_turkish:${userId}`
+                    ),
+                  ],
+                  [
+                    Markup.button.callback(
+                      `French 🇫🇷`,
+                      `lang_french:${userId}`
+                    ),
+                    Markup.button.callback(
+                      `Russian 🇷🇺`,
+                      `lang_russian:${userId}`
+                    ),
+                    Markup.button.callback(
+                      `Italian 🇮🇹`,
+                      `lang_italian:${userId}`
+                    ),
+                  ],
+                  [
+                    Markup.button.callback(
+                      `German 🇩🇪`,
+                      `lang_german:${userId}`
+                    ),
+                  ],
+                ])
+              );
+              break;
+            }
+
+            case "/setla": {
+              // Handle "/setla" command logic here if needed
+              break;
+            }
+
+            default: {
+              ctx.reply("Unknown command. Please try again.");
+              break;
+            }
           }
-          case "/setla": {
-            break;
-          }
+        } else {
+          ctx.reply("You are not connected to any active group.");
         }
+      } else {
+        ctx.reply("You are not connected to any active group.");
       }
-    } catch (error) {
-      console.error("Error processing admin command:", error);
-      ctx.reply("An error occurred while processing your request.");
     }
+  } catch (error) {
+    console.error("Error processing admin command:", error);
+    ctx.reply("An error occurred while processing your request.");
   }
 };
 
-export { connectAdmin, handleSettingsCommand };
+export { handleSettingsCommand, handleCommands };

@@ -1,6 +1,8 @@
 import express from "express";
 import { Telegraf } from "telegraf";
 import bodyParser from "body-parser";
+import dotenv from "dotenv";
+dotenv.config();
 
 import { handleSpamMssg } from "./antispam/antispam.js";
 import {
@@ -8,14 +10,13 @@ import {
   handleArithmeticCaptcahResponse,
 } from "./captcha/arithmetic.js";
 import LocalSession from "telegraf-session-local";
-import { connectAdmin, handleSettingsCommand } from "./funcs/commands.js";
-import {
-  handleCallback,
-  loadDataBase,
-  registerGroup,
-  saveToDataBase,
-} from "./funcs/functions.js";
-const token = "7885430459:AAGpsZbmfL7ZlqzQM9JKTwAJmmgkd8YYXgo";
+import { handleCommands } from "./funcs/commands.js";
+import { handleCallback, registerGroup } from "./funcs/functions.js";
+import connectDB from "./database/db.js";
+connectDB();
+
+const token = process.env.BOT_TOKEN;
+export const botId = token.split(":")[0];
 const app = express();
 app.use(bodyParser.json());
 
@@ -67,14 +68,14 @@ bot.on("chat_member", async (ctx) => {
 
 // Handle new messages
 bot.on("message", async (ctx) => {
-  //ctx.session = null
   handleArithmeticCaptcahResponse(ctx);
   handleSpamMssg(ctx);
 
-  connectAdmin(ctx);
-  handleSettingsCommand(ctx);
   registerGroup(ctx);
+
+  handleCommands(ctx);
 });
+
 // Handle callback_query
 bot.on("callback_query", async (ctx) => {
   handleCallback(ctx);

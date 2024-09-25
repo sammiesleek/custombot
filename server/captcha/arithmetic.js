@@ -1,4 +1,4 @@
-import { loadDataBase } from "../funcs/functions.js";
+import Group from "../database/model/groupModel.js";
 
 // Function to generate a random math problem
 function generateMathProblem() {
@@ -8,25 +8,53 @@ function generateMathProblem() {
   return { question: `${num1} + ${num2}`, solution };
 }
 
-const captchaRes = (ctx, userDisplayName, mathProblem) => {
-  const thisGroupId = ctx.chatMember.chat.id;
-  const groupSettings = loadDataBase("groups").find(
-    (group) => group.id === thisGroupId
-  )?.settings;
-  const grouplang = groupSettings?.lang || "english";
+const captchaRes = async (ctx, userDisplayName, mathProblem) => {
+  try {
+    const thisGroupId = ctx.chatMember.chat.id;
 
-  const messages = {
-    english: `Hello ${userDisplayName}, Welcome to our community. Please prove to me that you are a human by solving this simple math task: <b>${mathProblem}</b>`,
-    turkish: `Merhaba ${userDisplayName}, Topluluğumuza hoş geldiniz. Lütfen bu basit matematik testini çözerek insan olduğunuzu kanıtlayın: <b>${mathProblem}</b>`,
-    spanish: `¡Hola, ${userDisplayName}! Bienvenido a nuestra comunidad. Por favor, demuéstrame que eres humano resolviendo este sencillo problema matemático: <b>${mathProblem}</b>`,
-    russian: `Привет, ${userDisplayName}! Добро пожаловать в наше сообщество. Пожалуйста, докажи, что ты человек, решив эту простую математическую задачу: <b>${mathProblem}</b>`,
-    italian: `Ciao ${userDisplayName}! Benvenuto nella nostra comunità. Per favore, dimostrami che sei umano risolvendo questo semplice problema matematico: <b>${mathProblem}</b>`,
-    french: `Salut ${userDisplayName} ! Bienvenue dans notre communauté. Merci de me prouver que tu es humain en résolvant ce simple problème de maths : <b>${mathProblem}</b>`,
-    german: `Hallo ${userDisplayName}! Willkommen in unserer Community. Bitte zeig mir, dass du ein Mensch bist, indem du diese einfache Matheaufgabe löst: <b>${mathProblem}</b>`,
-  };
+    // Fetch the group settings from MongoDB
+    const group = await Group.findOne({ id: thisGroupId });
+    const grouplang = group?.settings?.lang || "english"; // Fallback to English if not set
 
-  return messages[grouplang] || messages.english;
+    // Define the messages in different languages
+    const messages = {
+      english: `Hello ${userDisplayName}, Welcome to our community. Please prove to me that you are a human by solving this simple math task: <b>${mathProblem}</b>`,
+      turkish: `Merhaba ${userDisplayName}, Topluluğumuza hoş geldiniz. Lütfen bu basit matematik testini çözerek insan olduğunuzu kanıtlayın: <b>${mathProblem}</b>`,
+      spanish: `¡Hola, ${userDisplayName}! Bienvenido a nuestra comunidad. Por favor, demuéstrame que eres humano resolviendo este sencillo problema matemático: <b>${mathProblem}</b>`,
+      russian: `Привет, ${userDisplayName}! Добро пожаловать в наше сообщество. Пожалуйста, докажи, что ты человек, решив эту простую математическую задачу: <b>${mathProblem}</b>`,
+      italian: `Ciao ${userDisplayName}! Benvenuto nella nostra comunità. Per favore, dimostrami che sei umano risolvendo questo semplice problema matematico: <b>${mathProblem}</b>`,
+      french: `Salut ${userDisplayName} ! Bienvenue dans notre communauté. Merci de me prouver que tu es humain en résolvant ce simple problème de maths : <b>${mathProblem}</b>`,
+      german: `Hallo ${userDisplayName}! Willkommen in unserer Community. Bitte zeig mir, dass du ein Mensch bist, indem du diese einfache Matheaufgabe löst: <b>${mathProblem}</b>`,
+    };
+
+    // Return the message in the appropriate language, default to English
+    return messages[grouplang] || messages.english;
+  } catch (error) {
+    console.error("Error fetching group settings:", error);
+    // Fallback message in case of an error
+    return `Hello ${userDisplayName}, Welcome to our community. Please solve this math task: <b>${mathProblem}</b>`;
+  }
 };
+
+// const captchaRes = (ctx, userDisplayName, mathProblem) => {
+//   const thisGroupId = ctx.chatMember.chat.id;
+//   const groupSettings = loadDataBase("groups").find(
+//     (group) => group.id === thisGroupId
+//   )?.settings;
+//   const grouplang = groupSettings?.lang || "english";
+
+//   const messages = {
+//     english: `Hello ${userDisplayName}, Welcome to our community. Please prove to me that you are a human by solving this simple math task: <b>${mathProblem}</b>`,
+//     turkish: `Merhaba ${userDisplayName}, Topluluğumuza hoş geldiniz. Lütfen bu basit matematik testini çözerek insan olduğunuzu kanıtlayın: <b>${mathProblem}</b>`,
+//     spanish: `¡Hola, ${userDisplayName}! Bienvenido a nuestra comunidad. Por favor, demuéstrame que eres humano resolviendo este sencillo problema matemático: <b>${mathProblem}</b>`,
+//     russian: `Привет, ${userDisplayName}! Добро пожаловать в наше сообщество. Пожалуйста, докажи, что ты человек, решив эту простую математическую задачу: <b>${mathProblem}</b>`,
+//     italian: `Ciao ${userDisplayName}! Benvenuto nella nostra comunità. Per favore, dimostrami che sei umano risolvendo questo semplice problema matematico: <b>${mathProblem}</b>`,
+//     french: `Salut ${userDisplayName} ! Bienvenue dans notre communauté. Merci de me prouver que tu es humain en résolvant ce simple problème de maths : <b>${mathProblem}</b>`,
+//     german: `Hallo ${userDisplayName}! Willkommen in unserer Community. Bitte zeig mir, dass du ein Mensch bist, indem du diese einfache Matheaufgabe löst: <b>${mathProblem}</b>`,
+//   };
+
+//   return messages[grouplang] || messages.english;
+// };
 
 const arithMeticCaptcha = async (ctx) => {
   const newMember = ctx.chatMember.new_chat_member;
@@ -51,7 +79,7 @@ const arithMeticCaptcha = async (ctx) => {
       : newMember.user.last_name;
 
     const challengeMessage = await ctx.replyWithHTML(
-      captchaRes(ctx, userDisplayName, mathProblem.question)
+      await captchaRes(ctx, userDisplayName, mathProblem.question)
     );
 
     ctx.session.captcha.challengeMessageId = challengeMessage.message_id;
