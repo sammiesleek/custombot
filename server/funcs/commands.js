@@ -1,5 +1,10 @@
 import { Markup } from "telegraf";
-import { botLink, isAdmin } from "./functions.js";
+import {
+  botLink,
+  getAdmins,
+  isAdmin,
+  updateGroupSettings,
+} from "./functions.js";
 import User from "../database/model/userModel.js";
 import Group from "../database/model/groupModel.js";
 
@@ -130,8 +135,22 @@ const groupCommands = async (ctx) => {
 
 const handleSettingsCommand = async (ctx) => {
   const messageText = ctx.message.text;
-  const [command, value] = messageText.toLowerCase().split(" ");
+
+  // const commandPattern = /^(\/\w+)\s+(["']?)(.+)\2$/;
+  const commandPattern = /^(\/\w+)(?:\s+(["']?)(.+)\2)?$/;
+  const match = messageText.match(commandPattern);
+
+  if (!match) {
+    ctx.reply("Invalid command format. Please try again.");
+    return;
+  }
+
+  const command = match[1]; // The command, e.g., "/setage" or "/addreason"
+  const value = match[3];
+
   const userId = ctx.message.from.id;
+  // const admins = await ctx.getChatAdministrators();
+  // console.log(admins);
   try {
     // get user from users Table
     const adminUser = await User.findOne({ id: userId });
@@ -145,10 +164,8 @@ const handleSettingsCommand = async (ctx) => {
           switch (command) {
             case "/start": {
               ctx.reply(`You are connected to ${connectedGroup.title}`);
-
               break;
             }
-
             case "/setlang": {
               ctx.reply(
                 "Please select your language:",
@@ -191,15 +208,29 @@ const handleSettingsCommand = async (ctx) => {
               );
               break;
             }
-
-            case "/setla": {
-              // Handle "/setla" command logic here if needed
+            case "/addblocklist": {
+              if (value) {
+                updateGroupSettings(userId, "blocklist", value, "addToList");
+                ctx.reply(value);
+              }
               break;
             }
-
-            default: {
-              ctx.reply("Unknown command. Please try again.");
+            case "/addfilter": {
+              if (value) {
+                console.log(value);
+                const filterKey = value.split('"')[0];
+                const filterValue = value.split('"')[1];
+                updateGroupSettings(
+                  userId,
+                  "filters",
+                  { [filterKey]: filterValue },
+                  "addToList"
+                );
+              }
               break;
+            }
+            default: {
+              ctx.reply("nill");
             }
           }
         } else {

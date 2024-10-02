@@ -67,28 +67,77 @@ const registerGroup = async (ctx) => {
             lang: "english", // Default language
           },
           blocklist: ["fake", "scam", "rug"], // Default blocklist
-          filters: {
-            website: "",
-            buy: "",
-            adminList: "",
-          },
+          filters: [],
         });
 
         // Save the new group to the MongoDB database
         await newGroupData.save();
-        console.log(`Group ${chatTitle} registered successfully.`);
-        ctx.reply(`Group ${chatTitle} has been successfully registered.`);
+        // console.log(`Group ${chatTitle} registered successfully.`);
+        // ctx.reply(`Group ${chatTitle} has been successfully registered.`);
       } else {
-        console.log(`Group ${chatTitle} already exists.`);
-        ctx.reply(`Group ${chatTitle} is already registered.`);
+        // console.log(`Group ${chatTitle} already exists.`);
+        // ctx.reply(`Group ${chatTitle} is already registered.`);
       }
     } catch (error) {
-      console.error("Error registering group:", error);
-      ctx.reply("An error occurred while registering the group.");
+      // console.error("Error registering group:", error);
+      // ctx.reply("An error occurred while registering the group.");
     }
   }
 };
-const updateGroupSettings = async (userId, pathToUpdate, newValue) => {
+// const updateGroupSettings = async (userId, pathToUpdate, newValue) => {
+//   try {
+//     // Load the admin user from the database
+//     const adminUser = await User.findOne({ id: userId });
+
+//     if (!adminUser || !adminUser.active_group) {
+//       console.error("Admin user or active group not found.");
+//       return;
+//     }
+
+//     const groupId = adminUser.active_group.id;
+
+//     // Load the connected group from the database
+//     const connectedGroup = await Group.findOne({ id: groupId });
+
+//     if (!connectedGroup) {
+//       console.error("Group not found.");
+//       return;
+//     }
+
+//     // Function to update nested object properties
+//     const updateObject = (obj, path, value) => {
+//       const keys = path.split(".");
+//       let current = obj;
+
+//       for (let i = 0; i < keys.length - 1; i++) {
+//         const key = keys[i];
+//         if (!current[key]) current[key] = {}; // If key doesn't exist, create it
+//         current = current[key];
+//       }
+
+//       current[keys[keys.length - 1]] = value; // Set the final key to the new value
+//     };
+
+//     // Update the group's settings using the path provided
+//     updateObject(connectedGroup, pathToUpdate, newValue);
+
+//     // Save the updated group back to the database
+//     await connectedGroup.save();
+
+//     console.log(
+//       `Group ${connectedGroup.title} updated. Path: ${pathToUpdate}, New Value: ${newValue}`
+//     );
+//   } catch (error) {
+//     console.error("Error updating group settings:", error);
+//   }
+// };
+
+const updateGroupSettings = async (
+  userId,
+  pathToUpdate,
+  newValue,
+  operation
+) => {
   try {
     // Load the admin user from the database
     const adminUser = await User.findOne({ id: userId });
@@ -108,8 +157,8 @@ const updateGroupSettings = async (userId, pathToUpdate, newValue) => {
       return;
     }
 
-    // Function to update nested object properties
-    const updateObject = (obj, path, value) => {
+    // Function to update nested object properties or arrays
+    const updateObject = (obj, path, value, operation) => {
       const keys = path.split(".");
       let current = obj;
 
@@ -118,18 +167,49 @@ const updateGroupSettings = async (userId, pathToUpdate, newValue) => {
         if (!current[key]) current[key] = {}; // If key doesn't exist, create it
         current = current[key];
       }
-
-      current[keys[keys.length - 1]] = value; // Set the final key to the new value
+      const lastKey = keys[keys.length - 1];
+      // Handle operations for arrays (blocklist)
+      if (Array.isArray(current[lastKey])) {
+        switch (operation) {
+          case "addToList":
+            if (!current[lastKey].includes(value)) {
+              current[lastKey].push(value); // Add if not already in the list
+            }
+            break;
+          case "removeFromList":
+            current[lastKey] = current[lastKey].filter(
+              (item) => item !== value
+            ); // Remove the item
+            break;
+          default:
+            console.error("Invalid operation for arrays.");
+        }
+      } else {
+        // Perform standard operations based on the input
+        switch (operation) {
+          case "update":
+            current[lastKey] = value; // Set the final key to the new value
+            break;
+          case "delete":
+            delete current[lastKey]; // Delete the key
+            break;
+          case "put":
+            current[lastKey] = value; // Replace the final key with the new value
+            break;
+          default:
+            console.error("Invalid operation type.");
+        }
+      }
     };
 
-    // Update the group's settings using the path provided
-    updateObject(connectedGroup, pathToUpdate, newValue);
+    // Apply the specified operation
+    updateObject(connectedGroup, pathToUpdate, newValue, operation);
 
     // Save the updated group back to the database
     await connectedGroup.save();
 
     console.log(
-      `Group ${connectedGroup.title} updated. Path: ${pathToUpdate}, New Value: ${newValue}`
+      `Group ${connectedGroup.title} updated. Operation: ${operation}, Path: ${pathToUpdate}, New Value: ${newValue}`
     );
   } catch (error) {
     console.error("Error updating group settings:", error);
@@ -169,7 +249,12 @@ const handleCallback = async (ctx) => {
   const selectedLanguage = languageMap[languageCode];
 
   if (selectedLanguage) {
-    updateGroupSettings(userIdt, "settings.lang", selectedLanguage.lang);
+    updateGroupSettings(
+      userIdt,
+      "settings.lang",
+      selectedLanguage.lang,
+      "update"
+    );
     await ctx.answerCbQuery("✅");
     await ctx.reply(selectedLanguage.message);
   }
@@ -205,116 +290,6 @@ const __dirname = dirname(__filename);
 
 const groupsBase = path.join(__dirname, "../group_db.json");
 const adminsBase = path.join(__dirname, "../admins_db.json");
-
-// const loadDataBase = (database) => {
-//   if (database == "admins") {
-//     if (fs.existsSync(adminsBase)) {
-//       const data = fs.readFileSync(adminsBase, "utf8");
-//       return JSON.parse(data);
-//     }
-//     return {};
-//   } else if (database == "groups") {
-//     if (fs.existsSync(groupsBase)) {
-//       const data = fs.readFileSync(groupsBase, "utf8");
-//       return JSON.parse(data);
-//     }
-//     return {};
-//   }
-// };
-
-// const saveToDataBase = (database, data) => {
-//   if (database == "admins") {
-//     const tempFilePath = adminsBase + ".tmp";
-//     fs.writeFileSync(tempFilePath, JSON.stringify(data, null, 2), "utf8");
-//     fs.renameSync(tempFilePath, adminsBase);
-//   } else if (database == "groups") {
-//     const tempFilePath = groupsBase + ".tmp";
-//     fs.writeFileSync(tempFilePath, JSON.stringify(data, null, 2), "utf8");
-//     fs.renameSync(tempFilePath, groupsBase);
-//   }
-// };
-
-// const updateGroupSettings = (userId, pathToUpdate, newValue) => {
-//   // Load the admin user from the database
-//   const adminUser = loadDataBase("admins").filter(
-//     (admin) => admin.id === userId
-//   )[0];
-
-//   if (!adminUser || !adminUser.active_group) {
-//     console.error("Admin user or active group not found.");
-//     return;
-//   }
-
-//   const groupId = adminUser.active_group.id;
-
-//   // Load the connected group from the database
-//   const groups = loadDataBase("groups");
-//   const connectedGroup = groups.filter((group) => group.id === groupId)[0];
-
-//   if (!connectedGroup) {
-//     console.error("Group not found.");
-//     return;
-//   }
-
-//   // Function to update nested object properties
-//   const updateObject = (obj, path, value) => {
-//     const keys = path.split(".");
-//     let current = obj;
-
-//     for (let i = 0; i < keys.length - 1; i++) {
-//       const key = keys[i];
-//       if (!current[key]) current[key] = {}; // If key doesn't exist, create it
-//       current = current[key];
-//     }
-
-//     current[keys[keys.length - 1]] = value; // Set the final key to the new value
-//   };
-
-//   // Update the group's settings using the path provided
-//   updateObject(connectedGroup, pathToUpdate, newValue);
-
-//   // Save the updated group back to the database
-//   saveToDataBase("groups", groups);
-
-//   // console.log(
-//   //   `Group ${connectedGroup.title} updated. Path: ${pathToUpdate}, New Value: ${newValue}`
-//   // );
-// };
-// const registerGroup = async (ctx) => {
-//   const newMember = ctx.message?.new_chat_member;
-
-//   if (newMember?.id === botId) {
-//     const allGroups = loadDataBase("groups");
-
-//     const groupExists = allGroups.some(
-//       (group) => group.id === ctx.message.chat.id
-//     );
-
-//     if (!groupExists) {
-//       const newGroupData = {
-//         id: ctx.message.chat.id,
-//         title: ctx.message.chat.title,
-//         username: ctx.message.chat.username || "",
-//         settings: {
-//           lang: "english", // Default language
-//         },
-//         blocklist: ["fake", "scam", "rug"], // Default blocklist
-//         filters: {
-//           website: "",
-//           buy: "",
-//           adminList: "",
-//         },
-//       };
-
-//       // Save the new group to the database
-//       saveToDataBase("groups", [...allGroups, newGroupData]);
-
-//       console.log(`Group ${ctx.message.chat.title} registered successfully.`);
-//     } else {
-//       console.log(`Group ${ctx.message.chat.title} already exists.`);
-//     }
-//   }
-// };
 
 export {
   getAdmins,

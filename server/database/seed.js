@@ -17,34 +17,30 @@ const groups = [
       lang: "english",
     },
     blocklist: ["fake", "rug"],
-    filters: {
-      website: "",
-      buy: "",
-      adminList: "",
-    },
+    filters: [],
   },
 ];
 
 // Function to seed the data
-const seedDatabase = async () => {
-  await connectDB(); // Ensure the DB is connected
+// const seedDatabase = async () => {
+//   await connectDB(); // Ensure the DB is connected
 
-  try {
-    // Clear existing data
-    await User.deleteMany({});
-    await Group.deleteMany({});
+//   try {
+//     // Clear existing data
+//     await User.deleteMany({});
+//     await Group.deleteMany({});
 
-    // Insert new data
-    await User.insertMany(users);
-    await Group.insertMany(groups);
+//     // Insert new data
+//     await User.insertMany(users);
+//     await Group.insertMany(groups);
 
-    console.log("Data successfully seeded");
-    process.exit();
-  } catch (error) {
-    console.error("Error seeding data:", error);
-    process.exit(1); // Exit the process on failure
-  }
-};
+//     console.log("Data successfully seeded");
+//     process.exit();
+//   } catch (error) {
+//     console.error("Error seeding data:", error);
+//     process.exit(1); // Exit the process on failure
+//   }
+// };
 
 // Run the seeding function
-seedDatabase();
+// seedDatabase();

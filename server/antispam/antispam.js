@@ -1,41 +1,57 @@
-import { getAdmins } from "../funcs/functions.js";
+import Group from "../database/model/groupModel.js";
+import { getAdmins, isAdmin } from "../funcs/functions.js";
 
 const handleSpamMssg = async (ctx) => {
+  const isAdminUser = await isAdmin(ctx);
 
+  if (!isAdminUser) {
+  }
 
-  if (ctx.message.chat.id && ctx.chat.type !== "private" && ctx.message.message_id && ctx.message.text && ctx.message.text.match(/(^|\s)@\w+/)) {
-    
+  try {
+    if (
+      ctx.message.chat.id &&
+      ctx.chat.type !== "private" &&
+      ctx.message.message_id &&
+      ctx.message.text &&
+      ctx.message.text.match(/(^|\s)@\w+/)
+    ) {
+      if (isAdminUser && ctx.message.text.match(/(^|\s)@\w+/)) {
+        const tagText = ctx.message.text
+          .match(/(^|\s)@\w+/)[0]
+          .replace(/@/g, "")
+          .trim();
 
-    const admins = await getAdmins(ctx)
-    let adminTags = []
-    const senderTag = ctx.message.from.username
-    admins.forEach(admin => {
-      adminTags.push(admin.user.username)
-    });
+        if (!adminTags.includes(tagText)) {
+          console.log("first");
 
-
-    // handlling banned words 
-    const bannerWords = ["scam", "fake", "de t"]
-    if (!adminTags.includes(senderTag) && ctx.message.text.match(/(^|\s)@\w+/)) {
-      const tagText = ctx.message.text.match(/(^|\s)@\w+/)[0].replace(/@/g, '').trim()
-    
-      
-      if (!adminTags.includes(tagText)) {
-        console.log("first")
-      
-        await ctx.telegram.deleteMessage(ctx.message.chat.id, ctx.message.message_id)
-      
+          await ctx.telegram.deleteMessage(
+            ctx.message.chat.id,
+            ctx.message.message_id
+          );
+        }
       }
     }
 
-    const offwords = bannerWords.filter((off) =>  ctx.message.text.toLowerCase().includes(off)).length
-
-    if (!adminTags.includes(senderTag) && offwords > 0) {
-
-        await ctx.telegram.deleteMessage(ctx.message.chat.id, ctx.message.message_id)
-
+    if (
+      ctx.message.chat.id &&
+      ctx.chat.type !== "private" &&
+      ctx.message.message_id &&
+      ctx.message.text
+    ) {
+      const thisGroup = await Group.findOne({ id: ctx.message.chat.id });
+      const blocklist = thisGroup.blocklist;
+      const offwords = blocklist.filter((off) =>
+        ctx.message.text.toLowerCase().includes(off)
+      ).length;
+      if (offwords > 0) {
+        await ctx.telegram.deleteMessage(
+          ctx.message.chat.id,
+          ctx.message.message_id
+        );
+      }
     }
+  } catch (error) {
+    console.log(error);
   }
-    
-}
-export {handleSpamMssg}
+};
+export { handleSpamMssg };

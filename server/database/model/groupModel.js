@@ -8,11 +8,7 @@ const groupSchema = new mongoose.Schema({
     lang: { type: String, default: "english" },
   },
   blocklist: { type: [String] },
-  filters: {
-    website: { type: String },
-    buy: { type: String },
-    adminList: { type: String },
-  },
+  filters: { type: [Object] },
 });
 
 const Group = mongoose.model("Group", groupSchema);

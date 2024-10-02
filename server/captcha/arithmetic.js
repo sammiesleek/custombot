@@ -1,4 +1,5 @@
 import Group from "../database/model/groupModel.js";
+import Session from "../database/model/sessionModel.js";
 
 // Function to generate a random math problem
 function generateMathProblem() {
@@ -36,41 +37,14 @@ const captchaRes = async (ctx, userDisplayName, mathProblem) => {
   }
 };
 
-// const captchaRes = (ctx, userDisplayName, mathProblem) => {
-//   const thisGroupId = ctx.chatMember.chat.id;
-//   const groupSettings = loadDataBase("groups").find(
-//     (group) => group.id === thisGroupId
-//   )?.settings;
-//   const grouplang = groupSettings?.lang || "english";
-
-//   const messages = {
-//     english: `Hello ${userDisplayName}, Welcome to our community. Please prove to me that you are a human by solving this simple math task: <b>${mathProblem}</b>`,
-//     turkish: `Merhaba ${userDisplayName}, Topluluğumuza hoş geldiniz. Lütfen bu basit matematik testini çözerek insan olduğunuzu kanıtlayın: <b>${mathProblem}</b>`,
-//     spanish: `¡Hola, ${userDisplayName}! Bienvenido a nuestra comunidad. Por favor, demuéstrame que eres humano resolviendo este sencillo problema matemático: <b>${mathProblem}</b>`,
-//     russian: `Привет, ${userDisplayName}! Добро пожаловать в наше сообщество. Пожалуйста, докажи, что ты человек, решив эту простую математическую задачу: <b>${mathProblem}</b>`,
-//     italian: `Ciao ${userDisplayName}! Benvenuto nella nostra comunità. Per favore, dimostrami che sei umano risolvendo questo semplice problema matematico: <b>${mathProblem}</b>`,
-//     french: `Salut ${userDisplayName} ! Bienvenue dans notre communauté. Merci de me prouver que tu es humain en résolvant ce simple problème de maths : <b>${mathProblem}</b>`,
-//     german: `Hallo ${userDisplayName}! Willkommen in unserer Community. Bitte zeig mir, dass du ein Mensch bist, indem du diese einfache Matheaufgabe löst: <b>${mathProblem}</b>`,
-//   };
-
-//   return messages[grouplang] || messages.english;
-// };
-
 const arithMeticCaptcha = async (ctx) => {
   const newMember = ctx.chatMember.new_chat_member;
-  console.log(newMember.status);
-  if (!newMember.user.is_bot && newMember.status == "member") {
+  if (!newMember.user.is_bot && newMember.status === "member") {
     const mathProblem = generateMathProblem();
 
-    // Store the problem and solution in the session
-    ctx.session.captcha = {
-      problem: mathProblem.question,
-      solution: mathProblem.solution,
-      attemptsLeft: 30,
-      status: "pending",
-      newMemberId: newMember.user.id,
-      thisChatId: ctx.chatMember.chat.id,
-    };
+    const userId = newMember.user.id;
+    const chatId = ctx.chatMember.chat.id;
+
     // Send the captcha challenge
     const userDisplayName = newMember.user.username
       ? "@" + newMember.user.username
@@ -78,49 +52,79 @@ const arithMeticCaptcha = async (ctx) => {
       ? newMember.user.first_name
       : newMember.user.last_name;
 
-    const challengeMessage = await ctx.replyWithHTML(
-      await captchaRes(ctx, userDisplayName, mathProblem.question)
-    );
+    try {
+      const challengeMessage = await ctx.replyWithHTML(
+        await captchaRes(ctx, userDisplayName, mathProblem.question)
+      );
 
-    ctx.session.captcha.challengeMessageId = challengeMessage.message_id;
-    ctx.session.captcha.challengechatId = challengeMessage.chat.id;
+      // Create a new session for the user
+      const newSession = new Session({
+        id: userId,
+        problem: mathProblem.question,
+        solution: mathProblem.solution,
+        attemptsLeft: 30,
+        status: "pending",
+        newMemberId: userId,
+        thisChatId: chatId,
+        challengeMessageId: challengeMessage.message_id,
+        challengechatId: challengeMessage.chat.id,
+      });
 
+      await newSession.save();
+    } catch (error) {
+      console.error(`Error creating session for user ${userId}:`, error);
+
+      return; // Exit the function on error
+    }
+
+    // Set a timeout for the captcha to expire
     setTimeout(async () => {
-      if (ctx.session.captcha.status === "pending") {
-        await ctx.telegram.deleteMessage(
-          ctx.session.captcha.challengechatId,
-          ctx.session.captcha.challengeMessageId
-        );
-        ctx.session.captcha.status = "expired";
-        await ctx.telegram.banChatMember(
-          ctx.session.captcha.challengechatId,
-          ctx.session.captcha.newMemberId
-        );
+      const sessionData = await Session.findOne({ id: userId });
+      if (sessionData) {
+        try {
+          // Attempt to delete the message
+          await ctx.telegram.deleteMessage(
+            sessionData.challengechatId,
+            sessionData.challengeMessageId
+          );
+
+          // If the session is still pending, restrict the user
+          if (sessionData.status === "pending") {
+            await ctx.telegram.restrictChatMember(
+              sessionData.challengechatId,
+              sessionData.newMemberId
+            );
+          }
+        } catch (error) {
+          console.error(`Error handling timeout for user ${userId}:`, error);
+        } finally {
+          // Delete the session after processing the timeout
+          await Session.deleteOne({ id: userId });
+        }
       }
-    }, 10000);
+    }, 20000);
   }
 };
 
 const handleArithmeticCaptcahResponse = async (ctx) => {
-  const userSession = ctx.session.captcha;
+  const userId = ctx.message.from.id; // Get the user ID
+  const userSession = await Session.findOne({ id: userId }); // Fetch the user session from the database
+
   if (userSession && userSession.status === "pending") {
     const userAnswer = parseInt(ctx.message.text, 10);
-    ctx.telegram.deleteMessage(ctx.message.chat.id, ctx.message.message_id);
+    console.log(userAnswer);
+    await ctx.telegram.deleteMessage(
+      ctx.message.chat.id,
+      ctx.message.message_id
+    );
 
-    if (userAnswer === userSession.solution) {
+    if (userAnswer == userSession.solution) {
       await ctx.telegram.deleteMessage(
         userSession.challengechatId,
         userSession.challengeMessageId
       );
 
-      userSession.status = "solved";
-    } else {
-      userSession.attemptsLeft--;
-
-      if (userSession.attemptsLeft > 0) {
-      } else {
-        userSession.status = "failed";
-      }
+      await Session.deleteOne({ id: userId });
     }
   }
 };

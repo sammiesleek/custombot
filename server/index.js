@@ -9,7 +9,6 @@ import {
   arithMeticCaptcha,
   handleArithmeticCaptcahResponse,
 } from "./captcha/arithmetic.js";
-import LocalSession from "telegraf-session-local";
 import { handleCommands } from "./funcs/commands.js";
 import { handleCallback, registerGroup } from "./funcs/functions.js";
 import connectDB from "./database/db.js";
@@ -20,9 +19,7 @@ export const botId = token.split(":")[0];
 const app = express();
 app.use(bodyParser.json());
 
-const bot = new Telegraf(token); // Use environment variable for bot token
-// Middleware for user sessions
-bot.use(new LocalSession({ database: "botcha_db.json" }).middleware());
+const bot = new Telegraf(token);
 
 // Webhook handler for Telegram
 app.post(`/webhook/${token}`, (req, res) => {
@@ -37,23 +34,6 @@ app.post(`/webhook/${token}`, (req, res) => {
       res.sendStatus(500); // Respond with 500 Internal Server Error if something goes wrong
     });
 });
-
-//setting web hoook
-// bot.telegram
-//   .setWebhook(`https://fe7f-105-119-4-200.ngrok-free.app/webhook/${token}`, {
-//     allowed_updates: JSON.stringify([
-//       "message",
-//       "edited_channel_post",
-//       "callback_query",
-//       "message_reaction",
-//       "message_reaction_count",
-//       "message",
-//       "chat_member",
-//     ]),
-//   })
-//   .then((info) => console.log(info));
-
-// bot.telegram.deleteWebhook().then((res)=> console.log(res))
 
 // Start the server
 const PORT = process.env.PORT || 6000;
