@@ -5,7 +5,7 @@ import { dirname } from "path";
 import Group from "../database/model/groupModel.js";
 import User from "../database/model/userModel.js";
 import { botId } from "../index.js";
-const botLink = "https://t.me/Tester_my_bot_bot?start=chat";
+const botLink = process.env.BOT_LINK;
 
 const getAdmins = async (ctx) => {
   if (ctx.message.chat.id && ctx.chat.type !== "private") {
