@@ -1,5 +1,5 @@
-import Group from "../database/model/groupModel.js";
-import Session from "../database/model/sessionModel.js";
+const Group = require("../database/model/groupModel");
+const Session = require("../database/model/sessionModel");
 
 // Function to generate a random math problem
 function generateMathProblem() {
@@ -129,4 +129,4 @@ const handleArithmeticCaptcahResponse = async (ctx) => {
   }
 };
 
-export { arithMeticCaptcha, handleArithmeticCaptcahResponse };
+module.exports = { arithMeticCaptcha, handleArithmeticCaptcahResponse };

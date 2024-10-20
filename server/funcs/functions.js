@@ -1,10 +1,11 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import Group from "../database/model/groupModel.js";
-import User from "../database/model/userModel.js";
-import { botId } from "../index.js";
+const fs = require("fs");
+const path = require("path");
+const { fileURLToPath } = require("url");
+const { dirname } = require("path");
+const Group = require("../database/model/groupModel");
+const User = require("../database/model/userModel");
+const { botId } = require("../index");
+
 const botLink = process.env.BOT_LINK;
 
 const getAdmins = async (ctx) => {
@@ -285,13 +286,7 @@ const isAdmin = async (ctx) => {
   }
 };
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const groupsBase = path.join(__dirname, "../group_db.json");
-const adminsBase = path.join(__dirname, "../admins_db.json");
-
-export {
+module.exports = {
   getAdmins,
   botLink,
   isAdmin,

@@ -1,12 +1,12 @@
-import { Markup } from "telegraf";
-import {
+const { Markup } = require("telegraf");
+const {
   botLink,
   getAdmins,
   isAdmin,
   updateGroupSettings,
-} from "./functions.js";
-import User from "../database/model/userModel.js";
-import Group from "../database/model/groupModel.js";
+} = require("./functions");
+const User = require("../database/model/userModel");
+const Group = require("../database/model/groupModel");
 
 const handleCommands = async (ctx) => {
   try {
@@ -246,4 +246,4 @@ const handleSettingsCommand = async (ctx) => {
   }
 };
 
-export { handleSettingsCommand, handleCommands };
+module.exports = { handleSettingsCommand, handleCommands };

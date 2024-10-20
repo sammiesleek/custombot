@@ -1,5 +1,5 @@
-import Group from "../database/model/groupModel.js";
-import { getAdmins, isAdmin } from "../funcs/functions.js";
+const Group = require("../database/model/groupModel");
+const { getAdmins, isAdmin } = require("../funcs/functions");
 
 const handleSpamMssg = async (ctx) => {
   const isAdminUser = await isAdmin(ctx);
@@ -54,4 +54,4 @@ const handleSpamMssg = async (ctx) => {
     console.log(error);
   }
 };
-export { handleSpamMssg };
+module.exports = { handleSpamMssg };

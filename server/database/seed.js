@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import User from "./model/userModel.js";
-import Group from "./model/groupModel.js";
-import connectDB from "./db.js";
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const User = require("./model/userModel");
+const Group = require("./model/groupModel");
+const connectDB = require("./db");
 dotenv.config();
 
 // Data to seed

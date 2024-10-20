@@ -1,21 +1,22 @@
-import express from "express";
-import { Telegraf } from "telegraf";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
+const express = require("express");
+const { Telegraf } = require("telegraf");
+const bodyParser = require("body-parser");
+const dotenv = require("dotenv");
 dotenv.config();
 
-import { handleSpamMssg } from "./antispam/antispam.js";
-import {
+const { handleSpamMssg } = require("./antispam/antispam.js");
+const {
   arithMeticCaptcha,
   handleArithmeticCaptcahResponse,
-} from "./captcha/arithmetic.js";
-import { handleCommands } from "./funcs/commands.js";
-import { handleCallback, registerGroup } from "./funcs/functions.js";
-import connectDB from "./database/db.js";
+} = require("./captcha/arithmetic.js");
+const { handleCommands } = require("./funcs/commands.js");
+const { handleCallback, registerGroup } = require("./funcs/functions.js");
+const connectDB = require("./database/db.js");
+
 connectDB();
 
 const token = process.env.BOT_TOKEN;
-export const botId = token.split(":")[0];
+const botId = token.split(":")[0]; // Keep this as a local variable
 const app = express();
 app.use(bodyParser.json());
 
@@ -27,8 +28,8 @@ app.post(`/webhook/${token}`, (req, res) => {
     .handleUpdate(req.body)
     .then(() => {
       console.log("working");
-      res.sendStatus(200);
-    }) // Respond with 200 OK if update was processed
+      res.sendStatus(200); // Respond with 200 OK if update was processed
+    })
     .catch((err) => {
       console.error("Failed to process update", err);
       res.sendStatus(500); // Respond with 500 Internal Server Error if something goes wrong
@@ -37,7 +38,7 @@ app.post(`/webhook/${token}`, (req, res) => {
 
 // Start the server
 const PORT = process.env.PORT || 6000;
-app.listen(PORT, (res) => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
@@ -50,9 +51,7 @@ bot.on("chat_member", async (ctx) => {
 bot.on("message", async (ctx) => {
   handleArithmeticCaptcahResponse(ctx);
   handleSpamMssg(ctx);
-
   registerGroup(ctx);
-
   handleCommands(ctx);
 });
 
@@ -66,3 +65,6 @@ app.get("/webhook-info", async (req, res) => {
   const info = await bot.telegram.getWebhookInfo();
   res.json(info);
 });
+
+// Export the botId if needed in other files
+module.exports = botId;
