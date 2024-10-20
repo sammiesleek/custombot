@@ -4,14 +4,14 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { handleSpamMssg } from "./antispam/antispam.js";
+import { handleSpamMssg } from "./server/antispam/antispam.js";
 import {
   arithMeticCaptcha,
   handleArithmeticCaptcahResponse,
-} from "./captcha/arithmetic.js";
-import { handleCommands } from "./funcs/commands.js";
-import { handleCallback, registerGroup } from "./funcs/functions.js";
-import connectDB from "./database/db.js";
+} from "./server/captcha/arithmetic.js";
+import { handleCommands } from "./server/funcs/commands.js";
+import { handleCallback, registerGroup } from "./server/funcs/functions.js";
+import connectDB from "./server/database/db.js";
 connectDB();
 
 const token = process.env.BOT_TOKEN;
