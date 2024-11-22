@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import Group from "../database/model/groupModel.js";
 import User from "../database/model/userModel.js";
-import { botId } from "../../index.mjs";
+import { botId } from "../../index.js";
 const botLink = process.env.BOT_LINK;
 
 const getAdmins = async (ctx) => {

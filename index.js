@@ -17,7 +17,14 @@ connectDB();
 const token = process.env.BOT_TOKEN;
 export const botId = token.split(":")[0];
 const app = express();
-app.use(bodyParser.json());
+
+// Increase the timeout for the server
+app.timeout = 60000;
+express.json({ limit: "50mb" });
+
+// Middleware with increased limits
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
 const bot = new Telegraf(token);
 
@@ -36,10 +43,10 @@ app.post(`/webhook/${token}`, (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 6000;
-app.listen(PORT, (res) => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 9000;
+// app.listen(PORT, (res) => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 
 // Handle new chat members
 bot.on("chat_member", async (ctx) => {
@@ -66,3 +73,32 @@ app.get("/webhook-info", async (req, res) => {
   const info = await bot.telegram.getWebhookInfo();
   res.json(info);
 });
+
+// Keep alive ping every 3 minutes
+setInterval(() => {
+  try {
+    bot.telegram.getMe().catch(console.error);
+  } catch (error) {
+    console.error("Keep alive error:", error);
+  }
+}, 180000);
+
+// Start the server
+const startServer = () => {
+  app.listen(PORT, async () => {
+    console.log(`Server running on port ${PORT}`);
+    // await setupWebhook();
+  });
+};
+
+// Error recovery
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
+});
+
+// Start the server
+startServer();

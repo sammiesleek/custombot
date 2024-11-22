@@ -1,5 +1,5 @@
-async function loadApp() {
-  await import("./index.jsd");
-}
+// async function loadApp() {
+//   await import("./index.jsd");
+// }
 
-loadApp();
+// loadApp();
