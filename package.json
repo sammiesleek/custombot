@@ -14,7 +14,7 @@
   "description": "math_captcha_bot",
   "main": "index.js",
   "scripts": {
-    "start": " node server/index.js"
+    "start": " index.js"
   },
   "author": "sammyajayi",
   "license": "ISC",
