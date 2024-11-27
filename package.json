@@ -12,7 +12,7 @@
   "type": "module",
   "version": "1.0.0",
   "description": "math_captcha_bot",
-  "main": "app.js",
+  "main": "app.mjs",
   "scripts": {
     "start": "node app.mjs"
   },
