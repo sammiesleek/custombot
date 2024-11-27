@@ -12,9 +12,9 @@
   "type": "module",
   "version": "1.0.0",
   "description": "math_captcha_bot",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": " index.js"
+    "start": "node app.mjs"
   },
   "author": "sammyajayi",
   "license": "ISC",
