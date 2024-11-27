@@ -42,11 +42,7 @@ app.post(`/webhook/${token}`, (req, res) => {
     });
 });
 
-// Start the server
 const PORT = process.env.PORT || 9000;
-// app.listen(PORT, (res) => {
-//   console.log(`Server running on port ${PORT}`);
-// });
 
 // Handle new chat members
 bot.on("chat_member", async (ctx) => {
