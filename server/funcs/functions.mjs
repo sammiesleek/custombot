@@ -5,7 +5,6 @@ import { dirname } from "path";
 import Group from "../database/model/groupModel.mjs";
 import User from "../database/model/userModel.mjs";
 import { botId } from "../../app.mjs";
-const botLink = process.env.BOT_LINK;
 
 const getAdmins = async (ctx) => {
   if (ctx.message.chat.id && ctx.chat.type !== "private") {
@@ -293,7 +292,6 @@ const adminsBase = path.join(__dirname, "../admins_db.json");
 
 export {
   getAdmins,
-  botLink,
   isAdmin,
   getGroup,
   registerGroup,

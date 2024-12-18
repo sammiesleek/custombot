@@ -32,6 +32,7 @@ https://botcha-37663de329fb.herokuapp.com/webhook/7702991466:AAFQWqHP-bcpIowPiVD
 
 
 
+SETTIGN WEBHOOK : https://api.telegram.org/bot7702991466:AAG1aeJcsUACAUzclfjiyFJqjnmzYDWiweU/setWebhook?url=https://techsavy.pw/webhook/7702991466:AAG1aeJcsUACAUzclfjiyFJqjnmzYDWiweU&allowed_updates=["message","edited_channel_post","callback_query","chat_member","message_reaction","message_reaction_count"]
 
 
 

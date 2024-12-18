@@ -1,5 +1,5 @@
 import Group from "../database/model/groupModel.mjs";
-import Session from "../database/model/sessionModel.js";
+import Session from "../database/model/sessionModel.mjs";
 
 // Function to generate a random math problem
 function generateMathProblem() {

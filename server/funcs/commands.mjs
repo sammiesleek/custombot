@@ -1,12 +1,8 @@
 import { Markup } from "telegraf";
-import {
-  botLink,
-  getAdmins,
-  isAdmin,
-  updateGroupSettings,
-} from "./functions.mjs";
+import { getAdmins, isAdmin, updateGroupSettings } from "./functions.mjs";
 import User from "../database/model/userModel.mjs";
 import Group from "../database/model/groupModel.mjs";
+import { botLink } from "../../app.mjs";
 
 const handleCommands = async (ctx) => {
   try {
@@ -96,7 +92,12 @@ const groupCommands = async (ctx) => {
             {
               reply_markup: {
                 inline_keyboard: [
-                  [{ text: "Chat with the Bot", url: botLink || "#" }], // Button with URL to the bot's DM
+                  [
+                    {
+                      text: "Chat with the Bot",
+                      url: botLink || "https://t.me/00232000000",
+                    },
+                  ], // Button with URL to the bot's DM
                 ],
               },
             }

@@ -8,28 +8,28 @@ const token = process.env.BOT_TOKEN;
 /**
  * Function to set the webhook.
  */
-async function setWebhook() {
+export async function setWebhook() {
   bot.telegram.deleteWebhook().then((res) => console.log(res));
-  //   try {
-  //     const webhookUrl = `https://techsavy.pw/webhook/${token}`;
-  //     const allowedUpdates = [
-  //       "message",
-  //       "edited_channel_post",
-  //       "callback_query",
-  //       "message_reaction",
-  //       "message_reaction_count",
-  //       "chat_member",
-  //     ];
+  try {
+    const webhookUrl = `https://techsavy.pw/webhook/${token}`;
+    const allowedUpdates = [
+      "message",
+      "edited_channel_post",
+      "callback_query",
+      "message_reaction",
+      "message_reaction_count",
+      "chat_member",
+    ];
 
-  //     const info = await bot.telegram.setWebhook(webhookUrl, {
-  //       allowed_updates: JSON.stringify(allowedUpdates),
-  //     });
+    const info = await bot.telegram.setWebhook(webhookUrl, {
+      allowed_updates: JSON.stringify(allowedUpdates),
+    });
 
-  //     console.log("Webhook set successfully:", info);
-  //   } catch (error) {
-  //     console.error("Error setting webhook:", error);
-  //   }
+    console.log("Webhook set successfully:", info);
+  } catch (error) {
+    console.error("Error setting webhook:", error);
+  }
 }
 
-setWebhook();
-end();
+// setWebhook();
+// end();

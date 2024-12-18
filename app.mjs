@@ -4,17 +4,19 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 dotenv.config();
 
-// import { handleSpamMssg } from "./server/antispam/antispam.mjs";
-// import {
-//   arithMeticCaptcha,
-//   handleArithmeticCaptcahResponse,
-// } from "./server/captcha/arithmetic.mjs";
-// import { handleCommands } from "./server/funcs/commands.mjs";
-// import { handleCallback, registerGroup } from "./server/funcs/functions.mjs";
+import { handleSpamMssg } from "./server/antispam/antispam.mjs";
+import {
+  arithMeticCaptcha,
+  handleArithmeticCaptcahResponse,
+} from "./server/captcha/arithmetic.mjs";
+import { handleCommands } from "./server/funcs/commands.mjs";
+import { handleCallback, registerGroup } from "./server/funcs/functions.mjs";
 import connectDB from "./server/database/db.mjs";
+import { setWebhook } from "./sethook.mjs";
 connectDB();
 const PORT = process.env.PORT || 9000;
 const token = process.env.BOT_TOKEN;
+const botLink = process.env.BOT_LINK;
 export const botId = token.split(":")[0];
 const app = express();
 
@@ -44,20 +46,20 @@ app.post(`/webhook/${token}`, (req, res) => {
 
 // Handle new chat members
 bot.on("chat_member", async (ctx) => {
-  // arithMeticCaptcha(ctx);
+  arithMeticCaptcha(ctx);
 });
 
 // Handle new messages
 bot.on("message", async (ctx) => {
-  // handleArithmeticCaptcahResponse(ctx);
-  // handleSpamMssg(ctx);
-  // registerGroup(ctx);
-  // handleCommands(ctx);
+  handleArithmeticCaptcahResponse(ctx);
+  handleSpamMssg(ctx);
+  registerGroup(ctx);
+  handleCommands(ctx);
 });
 
 // Handle callback_query
 bot.on("callback_query", async (ctx) => {
-  // handleCallback(ctx);
+  handleCallback(ctx);
 });
 
 // Utility endpoint to manually check webhook info
@@ -65,6 +67,7 @@ app.get("/webhook-info", async (req, res) => {
   const info = await bot.telegram.getWebhookInfo();
   res.json(info);
 });
+
 app.get("/", async (req, res) => {
   res.json("connected");
 });
@@ -82,19 +85,19 @@ setInterval(() => {
 const startServer = () => {
   app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
-    // await setupWebhook();
+    await setWebhook();
   });
 };
 
 // Error recovery
 process.on("uncaughtException", (err) => {
-  // console.error("Uncaught Exception:", err);
+  console.error("Uncaught Exception:", err);
 });
 
 process.on("unhandledRejection", (err) => {
-  // console.error("Unhandled Rejection:", err);
+  console.error("Unhandled Rejection:", err);
 });
 
 // Start the server
 startServer();
-export { bot };
+export { bot, botLink };
