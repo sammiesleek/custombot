@@ -1,4 +1,4 @@
-import Group from "../database/model/groupModel.js";
+import Group from "../database/model/groupModel.mjs";
 import Session from "../database/model/sessionModel.js";
 
 // Function to generate a random math problem

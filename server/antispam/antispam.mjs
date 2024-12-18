@@ -1,5 +1,5 @@
-import Group from "../database/model/groupModel.js";
-import { getAdmins, isAdmin } from "../funcs/functions.js";
+import Group from "../database/model/groupModel.mjs";
+import { getAdmins, isAdmin } from "../funcs/functions.mjs";
 
 const handleSpamMssg = async (ctx) => {
   const isAdminUser = await isAdmin(ctx);

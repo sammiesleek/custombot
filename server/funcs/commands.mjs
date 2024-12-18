@@ -4,9 +4,9 @@ import {
   getAdmins,
   isAdmin,
   updateGroupSettings,
-} from "./functions.js";
-import User from "../database/model/userModel.js";
-import Group from "../database/model/groupModel.js";
+} from "./functions.mjs";
+import User from "../database/model/userModel.mjs";
+import Group from "../database/model/groupModel.mjs";
 
 const handleCommands = async (ctx) => {
   try {

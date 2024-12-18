@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import Group from "../database/model/groupModel.js";
-import User from "../database/model/userModel.js";
+import Group from "../database/model/groupModel.mjs";
+import User from "../database/model/userModel.mjs";
 import { botId } from "../../app.mjs";
 const botLink = process.env.BOT_LINK;
 

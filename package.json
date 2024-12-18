@@ -14,7 +14,8 @@
   "description": "math_captcha_bot",
   "main": "app.mjs",
   "scripts": {
-    "start": "node app.mjs"
+    "start": "node app.mjs",
+    "set": "node sethook.mjs"
   },
   "author": "sammyajayi",
   "license": "ISC",
